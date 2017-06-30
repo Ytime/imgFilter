@@ -3,6 +3,7 @@ var path = require('path'),
     webpack = require('webpack');
 
 module.exports = {
+
     devtool: "cheap-eval-source-map",
     entry: './src/index.js',
     output: {
@@ -19,10 +20,10 @@ module.exports = {
                 ]
             },
             {
-                test: /.(png|svg|jpg|gif)$/,
+                test: /\.(png|svg|jpg|gif)$/,
                 use: ['file-loader']
             },
-            { test: /.html$/, use: ['raw-loader']}
+            { test: /\.html$/, use: ['raw-loader']}
         ]
     },
     plugins: [
@@ -35,11 +36,12 @@ module.exports = {
         new webpack.HotModuleReplacementPlugin(), // 启用 HMR
     ],
     devServer: {    //设置本地Server;
-         contentBase: path.join(__dirname,'dist'),  //设置启动文件目录;
-         publicPath: '/',
-         port: 5000,      //设置端口号；
-         compress: true, //设置gzip压缩;
-         inline: true,  //开启更新客户端入口(可在package.json scripts 里设置 npm run xxx);
-         hot: true    //设置热更新(可在package.json scripts 里设置 npm run xxx);
-       },
+        disableHostCheck: true,
+        contentBase: path.join(__dirname,'dist'),  //设置启动文件目录;
+        publicPath: '/',
+        port: 3000,      //设置端口号；
+        compress: true, //设置gzip压缩;
+        inline: true,  //开启更新客户端入口(可在package.json scripts 里设置 npm run xxx);
+        hot: true    //设置热更新(可在package.json scripts 里设置 npm run xxx);
+    }
 };
