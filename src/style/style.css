@@ -30,7 +30,7 @@ body{
 }
 
 header{
-    padding: 1em 4em;
+    padding: 1em 2em;
     color: #cdbfe3;
     text-shadow: 0 1px 0 rgba(0,0,0,.1);
     background-color: #6f5499;
@@ -136,17 +136,20 @@ header p{font-size: 18px;}
     /*display: none;*/
     position: absolute;
     z-index: 99;
-    /*top: 300px;*/
+    top: 2em;
     right: 2em;
-    bottom: 2em;
+    /*bottom: 2em;*/
     text-align: center;
     background: rgba(0,0,0,0.4);
 }
+.mat-con.active{
+    display: block;
+}
 .mat-con div{
-    width: 120px;
+    width: 10em;
 }
 .mat-con input{
-    width: 20px;
+    width: 2em;
     margin: 5px;
 }
 .mat-con button{

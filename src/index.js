@@ -1,38 +1,20 @@
 
 require("./index.html");  //改变html，webpack-dev-server无法监听html，通过require方法通知
 import "./style/style.css";
+import Filters from './Filters.js';
 
 //获取id
-var $ = function(id){
+const $ = function(id){
     return "string" === typeof id ? document.getElementById(id) : id;
 }
-//追加class
-var addClass = function(ele, className){
-    if (ele.classList){
-        ele.classList.add(className);
-    }else{
-        if (ele.className.indexOf(className) === -1){
-            ele.className += ' ' + className;
-        }
-    }
-}
-
-//删除class
-var removeClass = function(ele, className){
-    if (ele.classList){
-        ele.classList.remove(className);
-    }else{
-        ele.className = ele.className.replace(new  RegExp("(\\s|^)" + className + "(\\s|$)"),'');
-    }
-}
-
 //获取页面元素
-var oCanvas = $('canvas'),
+let oCanvas = $('canvas'),
     oDropper = $('wrapper'),
     oUl = $('filter-li'),
+    oMat = $('mat-con'),
     oBtn = $('apply-btn'),
     oCtx = oCanvas.getContext && oCanvas.getContext('2d'),
-    oFliter;
+    oFliter = null;
 
 //绑定事件
 oUl.addEventListener('click', applyPresetFliter, false);
@@ -41,37 +23,51 @@ oDropper.addEventListener('dragenter',preventDefault,false);
 oDropper.addEventListener('dragover',preventDefault,false);
 oDropper.addEventListener('drop', dropHandler, false);
 
+oMat.addEventListener('input', checkInput, false);
+oMat.addEventListener('keyup', postInput, false);
+oBtn.addEventListener('click', applyMat, false);
+
 
 //取消默认事件
 function preventDefault(event){
-    var evt = event || window.event;
+    let evt = event || window.event;
     evt.preventDefault();
 }
-
+function clearActive(){
+    let tar = oUl.getElementsByClassName('active')[0];
+    if(tar){
+        tar.classList.remove('active');
+    }
+}
 //drop放置事件处理函数
 function dropHandler(event){
     preventDefault(event);
     //获取文件
-    var oFile = event.dataTransfer.files[0];
-    var oReader = new FileReader();
+    let oFile = event.dataTransfer.files[0],
+        oReader = new FileReader();
     //读取image
     if(/image/.test(oFile.type)){
 
         //取消拖放提示
-        addClass(this, 'active');
+        this.classList.add('active');
         //读完文件
         oReader.onload = function(){
             console.log(oFile)
             //创建image对象保存图片
-            var oImg = new Image();
+            let oImg = new Image();
 
             oImg.onload = function(){
-                var iWid = this.width;
-                var iHei = this.height;
-                removeClass(oCanvas,'init');
-                oCanvas.width = iWid;  //要注意使用canvasobj.设置width，否则会图片会变形
+                let iWid = this.width,
+                    iHei = this.height;
+                oCanvas.classList.remove('init');
+                oMat.classList.add('active');
+                clearActive();
+                oCanvas.width = iWid;  //要注意使用canvasobj.width设置width，否则会图片会变形
                 oCanvas.height = iHei;
                 oCtx.drawImage(oImg, 0, 0, iWid, iHei);
+
+                //创建滤镜对象
+                oFliter = new Filters(this);
 
             }
             oImg.src = oReader.result;
@@ -85,15 +81,51 @@ function dropHandler(event){
 
 //应用预置滤镜
 function applyPresetFliter(event){
-    var tar = event.target || event.srcElement;
+    let tar = event.target || event.srcElement;
     //事件委托
     if (tar.tagName.toLocaleLowerCase() === 'li'){
-        var preTar = this.getElementsByClassName('active')[0];
-        if(preTar){
-            preTar.className = '';
+
+        let filterName = tar.getAttribute('data-filter');
+
+        if (oFliter){
+            clearActive()
+            oCtx.putImageData(oFliter[filterName](), 0, 0);
+            console.log('apply ' + filterName);
+            tar.classList.add('active');
         }
-        var filterName = tar.getAttribute('data-filter');
-        console.log('apply ' + filterName);
-        addClass(tar, 'active');
+    }
+}
+
+//应用矩阵卷积
+function applyMat(){
+    let aInputs = oMat.getElementsByTagName('input'),
+        mat = [],
+        val;
+    for (let i = 0, len = aInputs.length; i < len; i++){
+        val = aInputs[i].value - 0;
+        if (Number.isNaN(val)){
+            val = 0;
+        }
+        aInputs[i].value = val;
+        mat.push(val);
+    }
+    clearActive();
+    oCtx.putImageData(oFliter.conv(mat), 0, 0);
+}
+
+//输入矩阵校验
+function checkInput(event){
+    let tar = event.target || event.srcElement;
+    if (tar.tagName.toLocaleLowerCase() === 'input'){
+        tar.value = tar.value.replace(/[^\+\/\-\d\.]*/g,'');
+    }
+}
+//enter提交
+function postInput(event){
+    let tar = event.target || event.srcElement;
+    if (tar.tagName.toLocaleLowerCase() === 'input'){
+        if(event.keyCode === 13){
+            applyMat.apply(this);
+        }
     }
 }

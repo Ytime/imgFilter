@@ -17,12 +17,15 @@
 <nav class="preset">
     <div class="container">
         <ul id="filter-li" class="clear">
+            <li data-filter="getImageData">原图</li>
             <li data-filter="greyScale">灰度</li>
             <li data-filter="black">黑白</li>
             <li data-filter="comic">连环画</li>
             <li data-filter="sepia">怀旧</li>
             <li data-filter="invert">底片</li>
             <li data-filter="brightness">加亮</li>
+            <li data-filter="gaussBlur">模糊</li>
+            <li data-filter="sketch">素描</li>
         </ul>
     </div>
 </nav>
@@ -36,7 +39,7 @@
     <!--卷积矩阵-->
     <div class="mat-con" id="mat-con">
         <div>
-            <input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="9"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0">
+            <input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="1"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0">
         </div>
         <div><button id="apply-btn" title="矩阵卷积滤波">应用</button></div>
     </div>
