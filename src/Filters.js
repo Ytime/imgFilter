@@ -21,7 +21,7 @@ export default class Filters {
     }
 
     //img图像数据通过canvas复制一份
-    createImageData(imgData){
+    copyImageData(imgData){
         imgData = imgData || this.getImageData();
         let canvas =  document.createElement('canvas'),
             ctx = canvas.getContext('2d'),
@@ -107,59 +107,94 @@ export default class Filters {
 
     }
     //高斯模糊
-    gaussBlur(imgData){
+    //理论值遵循3σ原则，这里根据效果适当调大，在较小的阶数下也能有比较好的效果
+    gaussBlur(imgData, radius = 1, sigma = radius){
         imgData = imgData || this.getImageData();
-        let gaussMat = [16, 26, 16, 26, 41, 26, 16, 26, 16];
-        return this.conv(gaussMat, imgData, 209);
+        let order = radius*2 + 1,
+            a = -1 / (2 * sigma * sigma),
+            b = -a / Math.PI,
+            gaussMat = new Array(order * order),
+            gaussSum = 0;
+        for (let x = -radius, i = 0; x <= radius; x++){
+            for (let y = -radius; y <= radius; y++, i++){
+                gaussMat[i] = b * Math.exp(a * (x*x + y*y));
+                gaussSum += gaussMat[i];
+            }
+        }
+        //归一化
+        for (let i = 0; i < gaussMat.length; i++){
+            gaussMat[i] /= gaussSum;
+        }
+        //gaussMat = [16, 26, 16, 26, 41, 26, 16, 26, 16];
+        //let gaussMat = [1, 4, 7, 4, 1, 4, 16, 26, 16, 4, 7, 26, 41, 26, 7, 4, 16, 26, 16, 4, 1, 4, 7, 4, 1]
+        return this.conv(gaussMat, imgData, 1, order);
     }
     //素描
     sketch(imgData){
-        //imgData = imgData || this.getImageData();
-        //let imgGrey = this.greyScale(imgData),
-        //    imgInvert = this.invert(this.createImageData(imgGrey)),
-        //    data = imgInvert.data,
-        //    //复制一份imgInvert，然后进行高斯模糊
-        //    imgBlur = this.gaussBlur(this.createImageData(imgInvert)),
-        //    dataGrey = imgGrey.data,
-        //    v1, v2, v;
-        //for(let i = 0, len = data.length; i < len; i += 4){
-        //    v1 = data[i]; v2 = dataGrey[i];
-        //    v = v1 + v1 * v2 / (255 - v2);
-        //    v = v > 255 ? 255 : v;
-        //    data[i] = v;
-        //    data[i + 1] = v;
-        //    data[i + 2] = v;
-        //}
-        return this.gaussBlur(imgInvert);
+        imgData = imgData || this.getImageData();
+        let imgGrey = this.greyScale(imgData),  //灰度去色
+            imgInvert = this.invert(this.copyImageData(imgGrey)),  //复制一份反向imgInvert
+            imgBlur = this.gaussBlur(imgInvert), //对imgInvert进行高斯模糊
+            data = imgGrey.data,
+            dataBlur = imgBlur.data,
+            v1, v2, v, k;
+        //颜色减淡
+        for(let i = 0, len = data.length; i < len; i += 4){
+            for (let j = 0; j < 3; j++){
+                k = i + j;
+                v1 = data[k]; v2 = dataBlur[k];
+                v = v1 + v1 * v2 / (255 - v2);
+                v = v > 255 ? 255 : v;
+                data[k] = v;
+            }
+
+        }
+        return imgGrey;
     }
 
     //核卷积
-    conv(mat, imgData, divisor = 1){
+    conv(mat, imgData, divisor = 1, order = 3){
 
         imgData = imgData || this.getImageData();
         let data = imgData.data,
             w = this.width,
             h = this.height,
             outputImg = this.ctx.createImageData(w, h),
-            outData = outputImg.data;
+            outData = outputImg.data,
+            radius = Math.floor(order  / 2);
 
+        //先遍历图片像素(x, y)
         for(let y = 0; y < h; y++){
             for(let x = 0; x < w; x++){
-                //r,g,b三通道做一样的处理
+                //遍历r,g,b三通道，做一样的处理
                 for(let z = 0; z < 3; z++){
-                    let i = (y * w + x) * 4 + z;  //当前像素(x, y)在data中的索引
+                    let i = (y * w + x) * 4 + z;  //中心点像素(x, y)在data中的索引
 
                     //边界处理使用最简单的方法，即不做处理
-                    if (x == 1 || y == 1 || x == w || y == h){
+                    if (x < radius || y < radius || x >= w - radius || y >= h - radius){
                         outData[i] = data[i];
                     }
+                    //非边界处矩阵卷积
                     else{
-                        let m = i - w * 4,            //i上一行
-                            n = i + w * 4;            //i下一行
-                        outData[i] = (mat[0] * data[m - 4] + mat[1] * data[m] + mat[2] * data[m + 4] +
-                                mat[3] * data[i - 4] + mat[4] * data[i] + mat[5] * data[i + 4] +
-                                mat[6] * data[n - 4] + mat[7] * data[n] + mat[8] * data[n + 4]
-                            ) / divisor;
+                        //卷积和
+                        let convSum = 0,
+                            matIndex = 0,
+                            gaussSum = 0;
+                        //遍历矩阵行
+                        for (let m = -radius; m <= radius; m++ ){
+                            //矩阵列
+                            let rowIndex = i + w*4*m;   //(x-m,y)
+
+
+                            for (let n = -radius; n <= radius; n++){
+                                let colIndex = rowIndex + n*4;  //(x-m, y-n)
+                                convSum = convSum + mat[matIndex] * data[colIndex];
+                                gaussSum += mat[matIndex]
+                                matIndex++;
+
+                            }
+                        }
+                        outData[i] = convSum / divisor;
                     }
                 }
                 // 设置透明度
