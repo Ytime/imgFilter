@@ -1,10 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Canvas Images Processing</title>
 </head>
 <body>
+<header>
+    <div class="container">
+        <h1>基于canvas的图像处理</h1>
+        <p>像素级操作，Web也能玩转图片&nbsp;&nbsp;&nbsp; @Ytime</p>
+    </div>
+</header>
+<!--预置滤镜-->
+<nav class="preset">
+    <div class="container">
+        <ul id="filter-li" class="clear">
+            <li data-filter="getImageData">原图</li>
+            <li data-filter="greyScale">灰度</li>
+            <li data-filter="black">黑白</li>
+            <li data-filter="comic">连环画</li>
+            <li data-filter="sepia">怀旧</li>
+            <li data-filter="invert">底片</li>
+            <li data-filter="brightness">加亮</li>
+            <li data-filter="sharpen">锐化</li>
+            <li data-filter="edgeDetection">边缘检测</li>
+            <li data-filter="embossing">浮雕</li>
+            <li data-filter="gaussBlur">模糊</li>
+            <li data-filter="sketch">素描</li>
+
+        </ul>
+    </div>
+</nav>
+
+<!--图片显示-->
+<div id="wrapper" class="container content" title="拖拽新图片替换" droppable="true">
+    <canvas id="canvas" class="init">您的浏览器不支持canvas，请更换现代浏览器</canvas>
+    <div class="tip">
+        <span>把图片拖拽到此处</span>
+    </div>
+    <!--卷积矩阵-->
+    <div class="mat-con" id="mat-con">
+        <div>
+            <input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="1"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0"><input type="text" value="0">
+        </div>
+        <div><button id="apply-btn" title="矩阵卷积滤波">应用</button></div>
+    </div>
+</div>
 
 </body>
 </html>
