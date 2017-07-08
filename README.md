@@ -3,7 +3,7 @@
 
 详情移步[这里](https://ytime.github.io/2017/07/05/%E5%9F%BA%E4%BA%8Ecanvas%E5%AE%9E%E7%8E%B0%E5%9B%BE%E5%83%8F%E5%A4%84%E7%90%86/ "基于canvas的图像处理") 
 ## 预览
-[在线预览](imgFilter.ytime.me "imgFilter在线预览")
+[在线预览](//imgFilter.ytime.me "imgFilter在线预览")
 ## 技术栈
 **ES6**: 采用ES6语法，需要babel  
 **HTML5**: 拖放，文件，canvas等HTML5的API  
