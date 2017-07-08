@@ -52,7 +52,8 @@ export default class Filters {
         let data = imgData.data,
             v;
         for(let i = 0, len = data.length; i < len; i += 4){
-            v = (.2 * data[i] + .7 * data[i + 1] + .1 * data[i + 2]) >= threshold ? 255 : 0;
+            //v = (.2 * data[i] + .7 * data[i + 1] + .1 * data[i + 2]) >= threshold ? 255 : 0;
+            v = (.3 * data[i] + .6 * data[i + 1] + .1 * data[i + 2]) >= threshold ? 255 : 0;
             data[i] = data[i + 1] = data[i + 2] = v;
         }
         return imgData;
@@ -104,10 +105,34 @@ export default class Filters {
             data[i + 2] += deta;
         }
         return imgData;
-
     }
-    //高斯模糊
-    //理论值遵循3σ原则，这里根据效果适当调大，在较小的阶数下也能有比较好的效果
+
+    //锐化
+    sharpen(imgData){
+        imgData = imgData || this.getImageData();
+        return this.conv([0, -1, 0, -1, 5, -1, 0, -1, 0], imgData);
+    }
+    //边缘检测
+    edgeDetection(imgData){
+        imgData = imgData || this.getImageData();
+        return this.conv([-1, -1, -1, -1, 8, -1, -1, -1, -1], this.gaussBlur(imgData));
+    }
+    //浮雕
+    embossing(imgData){
+        imgData = imgData || this.getImageData();
+        return this.conv([1, 1, 1, 1, 0.7, -1, -1, -1, -1], imgData);
+    }
+
+    /**
+     * 高斯模糊
+     * 理论值遵循3σ原则，一般σ = radius/3，这里根据效果适当调大，在较小的阶数下也能有比较好的效果
+     *
+     * @param    {object}  imgData      要处理的imageData对象
+     * @param    {number}  radius       可选，卷积核半径，默认为1，
+     * @param    {number}  sigma        可选，卷积核的阶数，默认为radius
+     * @returns  {object}  outputImg    处理后的imageData对象
+     *
+     */
     gaussBlur(imgData, radius = 1, sigma = radius){
         imgData = imgData || this.getImageData();
         let order = radius*2 + 1,
@@ -121,13 +146,7 @@ export default class Filters {
                 gaussSum += gaussMat[i];
             }
         }
-        //归一化
-        for (let i = 0; i < gaussMat.length; i++){
-            gaussMat[i] /= gaussSum;
-        }
-        //gaussMat = [16, 26, 16, 26, 41, 26, 16, 26, 16];
-        //let gaussMat = [1, 4, 7, 4, 1, 4, 16, 26, 16, 4, 7, 26, 41, 26, 7, 4, 16, 26, 16, 4, 1, 4, 7, 4, 1]
-        return this.conv(gaussMat, imgData, 1, order);
+        return this.conv(gaussMat, imgData, order, gaussSum);
     }
     //素描
     sketch(imgData){
@@ -152,8 +171,18 @@ export default class Filters {
         return imgGrey;
     }
 
-    //核卷积
-    conv(mat, imgData, divisor = 1, order = 3){
+
+    /**
+     * 卷积核应用
+     *
+     * @param    {array}   mat          卷积矩阵，一维数组表示
+     * @param    {object}  imgData      要处理的imageData对象
+     * @param    {number}  divisor      可选，对卷积后数值归一化系数，默认为1，
+     * @param    {number}  order        可选，卷积核的阶数，默认为3
+     * @returns  {object}  outputImg    处理后的imageData对象
+     *
+     */
+    conv(mat, imgData, order = 3, divisor = 1){
 
         imgData = imgData || this.getImageData();
         let data = imgData.data,
@@ -168,7 +197,8 @@ export default class Filters {
             for(let x = 0; x < w; x++){
                 //遍历r,g,b三通道，做一样的处理
                 for(let z = 0; z < 3; z++){
-                    let i = (y * w + x) * 4 + z;  //中心点像素(x, y)在data中的索引
+                    //中心点像素(x, y)在data中的索引
+                    let i = (y * w + x) * 4 + z;
 
                     //边界处理使用最简单的方法，即不做处理
                     if (x < radius || y < radius || x >= w - radius || y >= h - radius){
@@ -178,18 +208,16 @@ export default class Filters {
                     else{
                         //卷积和
                         let convSum = 0,
-                            matIndex = 0,
-                            gaussSum = 0;
+                            matIndex = 0;
                         //遍历矩阵行
                         for (let m = -radius; m <= radius; m++ ){
-                            //矩阵列
-                            let rowIndex = i + w*4*m;   //(x-m,y)
-
+                            //矩阵列 (x-m,y)
+                            let rowIndex = i + w*4*m;
 
                             for (let n = -radius; n <= radius; n++){
-                                let colIndex = rowIndex + n*4;  //(x-m, y-n)
-                                convSum = convSum + mat[matIndex] * data[colIndex];
-                                gaussSum += mat[matIndex]
+                                //(x-m, y-n)
+                                let colIndex = rowIndex + n*4;
+                                convSum += mat[matIndex] * data[colIndex];
                                 matIndex++;
 
                             }
@@ -206,9 +234,6 @@ export default class Filters {
 
 }
 
-//Filters.prototype = {
-//
-//}
 
 
 
