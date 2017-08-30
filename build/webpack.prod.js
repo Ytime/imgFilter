@@ -1,6 +1,7 @@
 var path = require('path'),
     HtmlWebpackPlugin = require('html-webpack-plugin'),
-    webpack = require('webpack');
+    webpack = require('webpack'),
+    ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
 
@@ -8,17 +9,19 @@ module.exports = {
 
     entry: path.resolve(__dirname, '../src/index.js'),
     output: {
-        filename: 'bundle.[hash].js',
+        filename: 'bundle.[chunkhash].js',
         path: path.resolve(__dirname, '../dist')
     },
     module: {
         rules: [
             {
+                // test: /\.css$/,
+                // use: [
+                //     'style-loader',
+                //     'css-loader'
+                // ]
                 test: /\.css$/,
-                use: [
-                    'style-loader',
-                    'css-loader'
-                ]
+                use: ExtractTextPlugin.extract({use: 'css-loader'})
             },
             {
                 test: /\.js/,
@@ -33,6 +36,7 @@ module.exports = {
     },
     plugins: [
         //new webpack.optimize.UglifyJsPlugin(),
+        new ExtractTextPlugin('styles.[chunkhash].css'),
         new webpack.optimize.UglifyJsPlugin({
             sourceMap: true
         }),

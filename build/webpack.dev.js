@@ -1,6 +1,8 @@
 var path = require('path'),
     HtmlWebpackPlugin = require('html-webpack-plugin'),
-    webpack = require('webpack');
+    webpack = require('webpack'),
+    ExtractTextPlugin = require('extract-text-webpack-plugin');
+    // extractCSS = new ExtractTextPlugin('./[name].css');
 
 module.exports = {
 
@@ -14,11 +16,13 @@ module.exports = {
     module: {
         rules: [
             {
+                // test: /\.css$/,
+                // use: [
+                //     'style-loader',
+                //     'css-loader'
+                // ]
                 test: /\.css$/,
-                use: [
-                    'style-loader',
-                    'css-loader'
-                ]
+                use: ExtractTextPlugin.extract({use: 'css-loader'})
             },
             {
                 test: /\.js/,
@@ -33,11 +37,14 @@ module.exports = {
     },
     plugins: [
         //new webpack.optimize.UglifyJsPlugin(),
+        // extractCSS,
+        
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, '../src/index.html'),
             inject: 'body'
         }),
+        new ExtractTextPlugin('styles.css'),
         new webpack.HotModuleReplacementPlugin()// 启用 HMR
     ],
     devServer: {    //设置本地Server;
